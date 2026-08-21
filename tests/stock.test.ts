@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { sendLowStockAlert } from "@/lib/mail";
 import {
   registerUsage,
+  registerStockIn,
   maybeNotifyLowStock,
   InsufficientStockError,
 } from "@/lib/stock";
@@ -15,6 +16,7 @@ import {
 beforeEach(async () => {
   vi.clearAllMocks();
   await prisma.notificationLog.deleteMany();
+  await prisma.stockInLog.deleteMany();
   await prisma.usageLog.deleteMany();
   await prisma.item.deleteMany();
   await prisma.employee.deleteMany();
@@ -106,6 +108,26 @@ describe("registerUsage", () => {
     });
 
     expect(sendLowStockAlert).not.toHaveBeenCalled();
+  });
+});
+
+describe("registerStockIn", () => {
+  it("入荷登録すると在庫数が入荷数量分だけ加算され、履歴が1件作成される", async () => {
+    const item = await prisma.item.create({
+      data: { name: "テスト備品7", quantity: 5, threshold: 3, unit: "個" },
+    });
+
+    const updated = await registerStockIn({
+      itemId: item.id,
+      quantity: 20,
+      receivedAt: new Date(),
+    });
+
+    expect(updated.quantity).toBe(25);
+
+    const logs = await prisma.stockInLog.findMany({ where: { itemId: item.id } });
+    expect(logs).toHaveLength(1);
+    expect(logs[0].quantity).toBe(20);
   });
 });
 

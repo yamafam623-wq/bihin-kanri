@@ -22,16 +22,17 @@ model Employee {
 
 /// 備品マスタ
 model Item {
-  id        Int                @id @default(autoincrement())
-  name      String
-  quantity  Int                @default(0)
-  threshold Int                @default(0)
-  unit      String
-  note      String?
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-  usageLogs UsageLog[]
-  notices   NotificationLog[]
+  id          Int                @id @default(autoincrement())
+  name        String
+  quantity    Int                @default(0)
+  threshold   Int                @default(0)
+  unit        String
+  note        String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  usageLogs   UsageLog[]
+  notices     NotificationLog[]
+  stockInLogs StockInLog[]
 }
 
 /// 使用履歴（1件登録ごとにItem.quantityを減算する）
@@ -58,4 +59,17 @@ model NotificationLog {
   sentAt DateTime @default(now())
 
   @@index([itemId, sentAt])
+}
+
+/// 入荷記録（1件登録ごとにItem.quantityを加算する）
+model StockInLog {
+  id         Int      @id @default(autoincrement())
+  item       Item     @relation(fields: [itemId], references: [id])
+  itemId     Int
+  quantity   Int
+  receivedAt DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([itemId])
+  @@index([receivedAt])
 }

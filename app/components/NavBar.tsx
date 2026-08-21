@@ -6,6 +6,7 @@ const links = [
   { href: "/", label: "在庫一覧" },
   { href: "/usage/new", label: "使用登録" },
   { href: "/usage", label: "使用履歴" },
+  { href: "/stock-in", label: "入荷登録" },
   { href: "/employees", label: "社員マスタ" },
   { href: "/items", label: "備品マスタ" },
 ];

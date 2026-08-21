@@ -47,6 +47,32 @@ export async function registerUsage(input: RegisterUsageInput) {
   return updatedItem;
 }
 
+export type RegisterStockInInput = {
+  itemId: number;
+  quantity: number;
+  receivedAt: Date;
+};
+
+/**
+ * 入荷記録を1件登録し、同じトランザクション内でItemの在庫数を加算する。
+ */
+export async function registerStockIn(input: RegisterStockInInput) {
+  return prisma.$transaction(async (tx) => {
+    await tx.stockInLog.create({
+      data: {
+        itemId: input.itemId,
+        quantity: input.quantity,
+        receivedAt: input.receivedAt,
+      },
+    });
+
+    return tx.item.update({
+      where: { id: input.itemId },
+      data: { quantity: { increment: input.quantity } },
+    });
+  });
+}
+
 type NotifiableItem = {
   id: number;
   name: string;
