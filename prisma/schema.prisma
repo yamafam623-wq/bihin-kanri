@@ -1,0 +1,61 @@
+// 備品管理アプリ データベーススキーマ
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// 社員マスタ
+model Employee {
+  id        Int        @id @default(autoincrement())
+  name      String
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  usageLogs UsageLog[]
+
+  @@index([isActive])
+}
+
+/// 備品マスタ
+model Item {
+  id        Int                @id @default(autoincrement())
+  name      String
+  quantity  Int                @default(0)
+  threshold Int                @default(0)
+  unit      String
+  note      String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  usageLogs UsageLog[]
+  notices   NotificationLog[]
+}
+
+/// 使用履歴（1件登録ごとにItem.quantityを減算する）
+model UsageLog {
+  id         Int      @id @default(autoincrement())
+  item       Item     @relation(fields: [itemId], references: [id])
+  itemId     Int
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  quantity   Int
+  usedAt     DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([itemId])
+  @@index([employeeId])
+  @@index([usedAt])
+}
+
+/// 在庫僅少メール通知の送信履歴（同一品目への再送制御に使用）
+model NotificationLog {
+  id     Int      @id @default(autoincrement())
+  item   Item     @relation(fields: [itemId], references: [id])
+  itemId Int
+  sentAt DateTime @default(now())
+
+  @@index([itemId, sentAt])
+}
